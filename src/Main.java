@@ -25,8 +25,7 @@ public class Main extends JComponent{
     
     public static void main(String[] args){
         
-        int numExistingFiles = new File("images/").listFiles().length;
-        
+        int fileNum = getNumImgs("images/")+1;
         img = genImage(WIDTH, HEIGHT);
         
         
@@ -38,9 +37,9 @@ public class Main extends JComponent{
         frame.setVisible(true);
         
         Scanner in = new Scanner(System.in);
-        System.out.print("save?\n>> ");
+        System.out.print("save img_" + fileNum + "?\n>> ");
         if (in.next().startsWith("y")){
-            saveImage(img, "images/img_" + numExistingFiles + ".png");
+            saveImage(img, "images/img_" + fileNum + ".png");
             
             frame.setVisible(false); 
             frame.dispose();
@@ -70,11 +69,11 @@ public class Main extends JComponent{
         int i = 0;
         
         for (int y = 0; y < height; y++) {
-            
-            int red = y;
             for (int x = 0; x < width; x++) {
-                int green = x;
-                int blue = red*green/11;
+                int blue = y^x;
+                int red = 255-(y^x);
+                int green = red;
+               
                 rgbArray[i++] = (red << 16) | (green << 8) | blue;
             }
         }
@@ -83,6 +82,18 @@ public class Main extends JComponent{
         img.setRGB(0, 0, width, height, rgbArray, 0, width);
         
         return img;
+    }
+    
+    private static int getNumImgs(String filepath)
+    {
+        File[] folder = new File("images/").listFiles();
+        int count = 0;
+        for (File file: folder)
+        {
+            if (file.getName().endsWith(".png"))
+                count ++;
+        }
+        return count;
     }
     
 }
