@@ -73,41 +73,10 @@ public class Main extends JComponent{
         
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (x == sourceX && y == sourceY){
-                    rgbArray[i++] = (255 << 16) | (255 << 8) | 255;
-                    continue;
-                }
-                
-                boolean found = false;
-                int prevData = 0;
-                if (x - 1 >= 0)
-                {
-                    if (rgbArray[i-1] > 0){
-                        found = true;
-                        prevData = rgbArray[i-1];
-                    }
-                } if (!found && x + 1 < width){
-                    if (rgbArray[i+1] > 0){
-                        prevData = rgbArray[i-1];
-                        found = true;
-                    }
-                } if (!found && y - 1 >= 0){
-                    if (rgbArray[i-width] > 0){
-                        prevData = rgbArray[i-width];
-                        found = true;
-                    }
-                }
-                
-                prevData = (prevData >> 16) & 0xFF;
-                
-                int curCol = 0;
-                
-                if (Math.random() < 0.50d){
-                    curCol = (int)(prevData*1.1);
-                } else {
-                    curCol = (int)(prevData*0.95);
-                }
-                rgbArray[i++] = (curCol << 16) | (curCol << 8) | curCol;
+                int red = y&x;
+                int green = y^red;
+                int blue = red*green;
+                rgbArray[i++] = (red << 16) | (green << 8) | blue;
             }
         }
         
