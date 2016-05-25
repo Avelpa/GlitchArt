@@ -28,10 +28,10 @@ import javax.swing.JFrame;
  */
 public class Main extends JComponent implements MouseListener, KeyListener{
  
-    static final int WIDTH = 1000, HEIGHT = 1000;
+    static final int WIDTH = 850, HEIGHT = 850;
     static JFrame frame;
     
-    Color[][] grid = new Color[100][100];
+    Color[][] grid = new Color[50][50];
     BufferedImage img;
     
     int pixWidth = WIDTH/grid[0].length;
@@ -66,6 +66,16 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     {
         g.setColor(backGroundColor);
         g.fillRect(0, 0, WIDTH, HEIGHT);
+        
+        g.setColor(Color.DARK_GRAY);
+        for (int i = 0; i < HEIGHT; i += pixHeight)
+        {
+            g.drawLine(0, i, WIDTH, i);
+        }
+        for (int i = 0; i < WIDTH; i += pixWidth)
+        {
+            g.drawLine(i, 0, i, HEIGHT);
+        }
         
         for (int i = 0; i <= lastDrawnPoint; i ++)
         {
