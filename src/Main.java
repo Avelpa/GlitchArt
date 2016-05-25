@@ -2,12 +2,15 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Scanner;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -23,68 +26,56 @@ import javax.swing.JFrame;
  *
  * @author kobed6328
  */
-public class Main extends JComponent implements MouseListener{
+public class Main extends JComponent implements MouseListener, KeyListener{
  
     static final int WIDTH = 1000, HEIGHT = 1000;
-    static BufferedImage img;
+    static JFrame frame;
     
-    static Color[][] grid = new Color[50][50];
+    Color[][] grid = new Color[100][100];
+    BufferedImage img;
     
-    static int pixWidth = WIDTH/grid[0].length;
-    static int pixHeight = HEIGHT/grid.length;
+    int pixWidth = WIDTH/grid[0].length;
+    int pixHeight = HEIGHT/grid.length;
+    
+    boolean done = false;
+    ArrayList<Point> drawOrder = new ArrayList();
+    int lastDrawnPoint = -1;
+    
+    final int FPS = 60;
+    
+    Color backGroundColor = Color.BLACK;
     
     public static void main(String[] args){
         
-        for (int y = 0; y < grid.length; y ++)
-        {
-            for (int x = 0; x < grid[y].length; x ++)
-            {
-                grid[y][x] = Color.BLACK;
-            }
-        }
-        
-        int fileNum = getNumImgs("images/")+1;
-        
         Main main = new Main();
         
-        JFrame frame = new JFrame("Colors");
+        frame = new JFrame("Colors");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(main);
         frame.getContentPane().setPreferredSize(new Dimension(WIDTH, HEIGHT));
         frame.pack();
         frame.setVisible(true);
         main.addMouseListener(main);
+        frame.addKeyListener(main);
         
-        Scanner in = new Scanner(System.in);
-        System.out.print("save img_" + fileNum + "?\n>> ");
-        if (in.next().startsWith("y")){
-            saveImage(img, "images/img_" + fileNum + ".png");
-            
-            frame.setVisible(false); 
-            frame.dispose();
-        }
+        main.run();
     }
     
     @Override
     public void paintComponent(Graphics g)
     {
-        try {
-            for (int y = 0; y < grid.length; y ++)
-            {
-                for (int x = 0; x < grid[y].length; x ++)
-                {
-                    g.setColor(grid[y][x]);
-                    g.fillRect(x*pixWidth, y*pixHeight, pixWidth, pixHeight);
-                    Thread.sleep(1);
-                }
-            }
-                    
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        g.setColor(backGroundColor);
+        g.fillRect(0, 0, WIDTH, HEIGHT);
+        
+        for (int i = 0; i <= lastDrawnPoint; i ++)
+        {
+            Point gp = drawOrder.get(i);
+            g.setColor(grid[gp.y][gp.x]);
+            g.fillRect(gp.x*pixWidth, gp.y*pixHeight, pixWidth, pixHeight);
         }
     }
     
-    private static void saveImage(BufferedImage img, String filepath)
+    private void saveImage()
     {
         int[] rgbArray = new int[grid.length*grid[0].length];
         
@@ -96,15 +87,52 @@ public class Main extends JComponent implements MouseListener{
             }
         }
         
-        img = new BufferedImage( WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB );
-        img.setRGB(0, 0, WIDTH, HEIGHT, rgbArray, 0, WIDTH);
+        img = new BufferedImage( grid[0].length, grid.length, BufferedImage.TYPE_INT_RGB );
+        img.setRGB(0, 0, grid[0].length, grid.length, rgbArray, 0, grid[0].length);
+        
+        
         
         try {
+            int fileNum = getNumImgs("images/")+1;
+            String filepath = "images/img_" + fileNum + ".png";
             File outputfile = new File(filepath).getAbsoluteFile();
             ImageIO.write(img, "png", outputfile);
-        } catch (IOException ex) {
-            System.err.println(ex);
+        } catch (IOException e) {
+            System.err.println(e);
         }
+    }
+    
+    private void run()
+    {
+        for (int y = 0; y < grid.length; y ++)
+        {
+            for (int x = 0; x < grid[y].length; x ++)
+            {
+                grid[y][x] = Color.BLACK;
+            }
+        }
+        while(!done)
+        {
+            
+            
+            backGroundColor = backGroundColor.darker();
+            
+            if (lastDrawnPoint < drawOrder.size()-1)
+            {
+                lastDrawnPoint ++;
+            }
+            repaint();
+            
+            try {
+                Thread.sleep(1000/FPS);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            repaint();
+        }
+            
+        frame.setVisible(false); 
+        frame.dispose();
     }
     
     private void spawnWorm(int x, int y )
@@ -113,11 +141,8 @@ public class Main extends JComponent implements MouseListener{
 
         while ((int)curColor > 0)
         {
-            if (x >= grid[0].length || x < 0 || y >= grid.length || y < 0)
-                break;
-            
             grid[y][x] = new Color((int)curColor, (int)curColor, (int)curColor);
-            
+            drawOrder.add(new Point(x, y));
             
             int newX = x;
             int newY = y;
@@ -140,7 +165,7 @@ public class Main extends JComponent implements MouseListener{
                             newX --;
                         break;
                     case 3:
-                        if (newY < grid.length-1);
+                        if (newY < grid.length-1)
                             newY ++;
                         break;
                     case 4:
@@ -175,8 +200,12 @@ public class Main extends JComponent implements MouseListener{
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        spawnWorm(e.getX()/pixWidth, e.getY()/pixHeight);
-        repaint();
+        int clickX = e.getX()/pixWidth;
+        int clickY = e.getY()/pixHeight;
+        if (grid[clickY][clickX] == Color.BLACK)
+            spawnWorm(e.getX()/pixWidth, e.getY()/pixHeight);
+        else
+            backGroundColor = Color.RED;
     }
 
     @Override
@@ -193,6 +222,22 @@ public class Main extends JComponent implements MouseListener{
 
     @Override
     public void mouseExited(MouseEvent e) {
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyChar()== 's')
+        {
+            saveImage();
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
     }
     
 }
