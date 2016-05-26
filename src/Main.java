@@ -31,7 +31,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     static final int WIDTH = 850, HEIGHT = 850;
     static JFrame frame;
     
-    Color[][] grid = new Color[50][50];
+    Color[][] grid = new Color[150][150];
     BufferedImage img;
     
     int pixWidth = WIDTH/grid[0].length;
