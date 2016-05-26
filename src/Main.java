@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -28,22 +29,26 @@ import javax.swing.JFrame;
  */
 public class Main extends JComponent implements MouseListener, KeyListener{
  
-    static final int WIDTH = 850, HEIGHT = 850;
+    static final int WIDTH = 800, HEIGHT = 800;
     static JFrame frame;
     
-    Color[][] grid = new Color[150][150];
+    Color[][] grid = new Color[100][100];
     BufferedImage img;
     
     int pixWidth = WIDTH/grid[0].length;
     int pixHeight = HEIGHT/grid.length;
     
     boolean done = false;
-    ArrayList<Point> drawOrder = new ArrayList();
-    int lastDrawnPoint = -1;
+    ArrayList<Point> targets = new ArrayList();
+    ArrayList<Worm> worms = new ArrayList();
     
     final int FPS = 60;
     
     Color backGroundColor = Color.BLACK;
+    
+    int targetX, targetY;
+    
+    boolean paused = false;
     
     public static void main(String[] args){
         
@@ -77,18 +82,24 @@ public class Main extends JComponent implements MouseListener, KeyListener{
             g.drawLine(i, 0, i, HEIGHT);
         }
         
-        for (int i = 0; i <= lastDrawnPoint; i ++)
+        for (Worm worm: worms)
         {
-            Point gp = drawOrder.get(i);
-            g.setColor(grid[gp.y][gp.x]);
-            g.fillRect(gp.x*pixWidth, gp.y*pixHeight, pixWidth, pixHeight);
+            for (Point p: worm.getPoints())
+            {
+                g.setColor(grid[p.y][p.x]);
+                g.fillRect(p.x*pixWidth, p.y*pixHeight, pixWidth, pixHeight);
+            }
+        }
+        for (Point p: targets)
+        {
+            g.setColor(Color.GREEN);
+            g.fillRect(p.x*pixWidth, p.y*pixHeight, pixWidth, pixHeight);
         }
     }
     
     private void saveImage()
     {
         int[] rgbArray = new int[grid.length*grid[0].length];
-        
         for (int y = 0; y < grid.length; y ++)
         {
             for (int x = 0; x < grid[y].length; x ++)
@@ -123,13 +134,16 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         }
         while(!done)
         {
-            
-            
-            backGroundColor = backGroundColor.darker();
-            
-            if (lastDrawnPoint < drawOrder.size()-1)
+            if (!paused)
             {
-                lastDrawnPoint ++;
+                if (!targets.isEmpty())
+                {
+                    for (Worm worm: worms)
+                    {
+                        Point newHead = worm.move(targets);
+                        grid[newHead.y][newHead.x] = Color.WHITE;
+                    }
+                }
             }
             repaint();
             
@@ -147,54 +161,28 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     
     private void spawnWorm(int x, int y )
     {
-        double curColor = 255;
-
-        while ((int)curColor > 0)
-        {
-            grid[y][x] = new Color((int)curColor, (int)curColor, (int)curColor);
-            drawOrder.add(new Point(x, y));
-            
-            int newX = x;
-            int newY = y;
-            
-            int loop = 0;
-            
-            while (loop < 10 && grid[newY][newX] != Color.BLACK)
-            {
-                newX = x;
-                newY = y;
-                
-                int randomNum = (int)(Math.random()*4)+1;
-                switch(randomNum){
-                    case 1:
-                        if (newX < grid[0].length-1)
-                            newX ++;
-                        break;
-                    case 2:
-                        if (newX > 0)
-                            newX --;
-                        break;
-                    case 3:
-                        if (newY < grid.length-1)
-                            newY ++;
-                        break;
-                    case 4:
-                        if (newY > 0)
-                            newY --;
-                        break;
-                }
-                
-                loop ++;
-            }
-            if (loop >= 10)
-                break;
-            x = newX;
-            y = newY;
-            curColor --;
-        }
+        grid[y][x] = Color.WHITE;
+        worms.add(new Worm(x, y));
     }
-        
-        
+    
+    public void spawnTarget(int x, int y)
+    {
+        grid[y][x] = Color.GREEN;
+        targets.add(new Point(x, y));
+    }
+    
+    public void reset()
+    {
+        for (int y = 0; y < grid.length; y ++)
+        {
+            for (int x = 0; x < grid[y].length; x ++)
+            {
+                grid[y][x] = Color.BLACK;
+            }
+        }
+        worms.clear();
+        targets.clear();
+    }
     
     private static int getNumImgs(String filepath)
     {
@@ -212,10 +200,12 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     public void mouseClicked(MouseEvent e) {
         int clickX = e.getX()/pixWidth;
         int clickY = e.getY()/pixHeight;
-        if (grid[clickY][clickX] == Color.BLACK)
-            spawnWorm(e.getX()/pixWidth, e.getY()/pixHeight);
-        else
-            backGroundColor = Color.RED;
+        if (grid[clickY][clickX] == Color.BLACK){
+            if (e.getButton() == 1)
+                spawnWorm(clickX, clickY);
+            else if (e.getButton() == 3)
+                spawnTarget(clickX, clickY);
+        }
     }
 
     @Override
@@ -239,10 +229,18 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
+    public void keyPressed(KeyEvent e){
         if (e.getKeyChar()== 's')
         {
             saveImage();
+        }
+        else if (e.getKeyCode() == KeyEvent.VK_SPACE)
+        {
+            paused = paused ? false: true;
+            backGroundColor = paused ? Color.BLUE : Color.BLACK;
+        } else if (e.getKeyChar() == 'r')
+        {
+            reset();
         }
     }
 
