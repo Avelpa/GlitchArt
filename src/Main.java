@@ -140,8 +140,13 @@ public class Main extends JComponent implements MouseListener, KeyListener{
                 {
                     for (Worm worm: worms)
                     {
-                        Point newHead = worm.move(targets);
-                        grid[newHead.y][newHead.x] = Color.WHITE;
+                        worm.move(targets, grid);
+                    }
+                } else {
+                    for (Worm worm: worms)
+                    {
+                        if (worm.shrinking())
+                            worm.shrink(grid);
                     }
                 }
             }
@@ -162,7 +167,12 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     private void spawnWorm(int x, int y )
     {
         grid[y][x] = Color.WHITE;
-        worms.add(new Worm(x, y));
+        worms.add(new Worm(x, y, randomInt(5, 30)));
+    }
+    
+    private int randomInt(int min, int max)
+    {
+        return (int)(Math.random()*(max-min+1))+min;
     }
     
     public void spawnTarget(int x, int y)
@@ -198,6 +208,10 @@ public class Main extends JComponent implements MouseListener, KeyListener{
 
     @Override
     public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
         int clickX = e.getX()/pixWidth;
         int clickY = e.getY()/pixHeight;
         if (grid[clickY][clickX] == Color.BLACK){
@@ -206,10 +220,6 @@ public class Main extends JComponent implements MouseListener, KeyListener{
             else if (e.getButton() == 3)
                 spawnTarget(clickX, clickY);
         }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
     }
 
     @Override

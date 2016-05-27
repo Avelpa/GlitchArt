@@ -1,6 +1,8 @@
 
+import java.awt.Color;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /*
  * To change this template, choose Tools | Templates
@@ -13,33 +15,51 @@ import java.util.ArrayList;
  */
 public class Worm {
     
-    private ArrayList<Point> points;
-    private Point head;
-    private Point newHead;
+    private LinkedList<Point> points;
     private Point closestPoint;
+    private int maxSize;
+    private boolean shrinking;
     
-    public Worm(int x, int y)
+    public Worm(int x, int y, int maxSize)
     {
-        points = new ArrayList();
-        head = new Point(x, y);
-        points.add(head);
+        points = new LinkedList();
+        points.add(0, new Point(x, y));
+        this.maxSize = maxSize;
+        shrinking = false;
     }
     
-    public Point move(ArrayList<Point> targets)
+    public void move(ArrayList<Point> targets, Color[][] grid)
     {
         genClosestPoint(targets);
-        int dirX = (int)Math.signum(closestPoint.x-head.x);
-        int dirY = (int)Math.signum(closestPoint.y-head.y);
+        int dirX = (int)Math.signum(closestPoint.x-points.peek().x);
+        int dirY = (int)Math.signum(closestPoint.y-points.peek().y);
         
-        if (dirX == 0 && dirY == 0)
+        if (dirX == 0 && dirY == 0){
             targets.remove(closestPoint);
-        else {
-            newHead = new Point(head.x + dirX, head.y+dirY);
-            head = newHead;
-            points.add(head);
         }
-        
-        return head;
+        else {
+            int newX = points.peek().x + dirX;
+            int newY = points.peek().y + dirY;
+            
+            if (points.size() < maxSize){
+                points.add(new Point(newX, newY));
+            } else {
+                grid[points.getLast().y][points.getLast().x] = Color.BLACK;
+                points.getLast().setLocation(newX, newY);
+                points.add(0, points.removeLast());
+            }
+            
+            grid[points.peek().y][points.peek().x] = Color.WHITE;
+        }
+    }
+    
+    public void shrink(Color[][] shrink)
+    {
+        if (points.size() > 1){
+            points.removeLast();
+        }
+        if (points.size() == 1)
+            shrinking = false;
     }
     
     private void genClosestPoint(ArrayList<Point> targets)
@@ -49,17 +69,25 @@ public class Worm {
         
         for (Point p: targets)
         {
-            r = Math.sqrt(Math.pow(Math.abs(p.x-head.x), 2) + Math.pow(Math.abs(p.y-head.y), 2));
+            r = Math.sqrt(Math.pow(Math.abs(p.x-points.peek().x), 2) + Math.pow(Math.abs(p.y-points.peek().y), 2));
             if (r < minRadius)
             {
                 minRadius = r;
                 closestPoint = p;
             }
         }
+        
+        if (minRadius == 1)
+            shrinking = true;
+            
     }
     
-    public ArrayList<Point> getPoints()
+    public LinkedList<Point> getPoints()
     {
         return points;
+    }
+    public boolean shrinking()
+    {
+        return shrinking;
     }
 }
