@@ -36,26 +36,27 @@ public class Worm {
         
         if (dirX == 0 && dirY == 0){
             targets.remove(closestPoint);
+            grid[points.peek().y][points.peek().x] = Color.BLACK;
         }
         else {
             int newX = points.peek().x + dirX;
             int newY = points.peek().y + dirY;
             
             if (points.size() < maxSize){
-                points.add(new Point(newX, newY));
+                points.add(0, new Point(newX, newY));
             } else {
                 grid[points.getLast().y][points.getLast().x] = Color.BLACK;
                 points.getLast().setLocation(newX, newY);
                 points.add(0, points.removeLast());
             }
-            
-            grid[points.peek().y][points.peek().x] = Color.WHITE;
         }
+        grid[points.peek().y][points.peek().x] = Color.WHITE;
     }
     
-    public void shrink(Color[][] shrink)
+    public void shrink(Color[][] grid)
     {
         if (points.size() > 1){
+            grid[points.getLast().y][points.getLast().x] = Color.BLACK;
             points.removeLast();
         }
         if (points.size() == 1)
