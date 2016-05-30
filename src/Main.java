@@ -7,11 +7,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -27,7 +27,7 @@ import javax.swing.JFrame;
  *
  * @author kobed6328
  */
-public class Main extends JComponent implements MouseListener, KeyListener{
+public class Main extends JComponent implements MouseListener, MouseMotionListener, KeyListener{
  
     static final int WIDTH = 800, HEIGHT = 800;
     static JFrame frame;
@@ -41,6 +41,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     boolean done = false;
     ArrayList<Point> targets = new ArrayList();
     ArrayList<Worm> worms = new ArrayList();
+    ArrayList<Point> walls = new ArrayList();
     
     final int FPS = 30;
     
@@ -49,6 +50,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     int targetX, targetY;
     
     boolean paused = false;
+    boolean clicked = false;
     
     public static void main(String[] args){
         
@@ -62,6 +64,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         frame.setVisible(true);
         main.addMouseListener(main);
         frame.addKeyListener(main);
+        main.addMouseMotionListener(main);
         
         main.run();
     }
@@ -94,6 +97,11 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         for (Point p: targets)
         {
             g.setColor(Color.GREEN);
+            g.fillRect(p.x*pixWidth, p.y*pixHeight, pixWidth, pixHeight);
+        }
+        for (Point p: walls)
+        {
+            g.setColor(Color.DARK_GRAY);
             g.fillRect(p.x*pixWidth, p.y*pixHeight, pixWidth, pixHeight);
         }
     }
@@ -159,16 +167,22 @@ public class Main extends JComponent implements MouseListener, KeyListener{
             }
             repaint();
             
-            
-            endTime = System.nanoTime()/1000;
-            if (endTime - startTime < 1000/FPS){
-                try {
-                    Thread.sleep(1000/FPS - (endTime - startTime));
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            try {
+                Thread.sleep(1000/FPS);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
             
+//            repaint();
+//            
+//            endTime = System.nanoTime()/1000;
+//            if (endTime - startTime < 1000/FPS){
+//                try {
+//                    Thread.sleep(1000/FPS - (endTime - startTime));
+//                } catch (InterruptedException ex) {
+//                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//            }
         }
             
         frame.setVisible(false); 
@@ -192,6 +206,12 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         targets.add(new Point(x, y));
     }
     
+    public void spawnWall(int x, int y)
+    {
+        grid[y][x] = Color.DARK_GRAY;
+        walls.add(new Point(x, y));
+    }
+    
     public void reset()
     {
         for (int y = 0; y < grid.length; y ++)
@@ -203,6 +223,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         }
         worms.clear();
         targets.clear();
+        walls.clear();
     }
     
     private static int getNumImgs(String filepath)
@@ -223,6 +244,10 @@ public class Main extends JComponent implements MouseListener, KeyListener{
 
     @Override
     public void mousePressed(MouseEvent e) {
+        
+        
+        clicked = true;
+        
         int clickX = e.getX()/pixWidth;
         int clickY = e.getY()/pixHeight;
 //        if (grid[clickY][clickX] == Color.BLACK){
@@ -230,11 +255,16 @@ public class Main extends JComponent implements MouseListener, KeyListener{
                 spawnWorm(clickX, clickY);
             else if (e.getButton() == 3)
                 spawnTarget(clickX, clickY);
+            else if (e.getButton() == 2)
+                spawnWall(clickX, clickY);
 //        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        
+        clicked = false;
+        
     }
 
     @Override
@@ -251,6 +281,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
 
     @Override
     public void keyPressed(KeyEvent e){
+        
         if (e.getKeyChar()== 's')
         {
             saveImage();
@@ -267,6 +298,27 @@ public class Main extends JComponent implements MouseListener, KeyListener{
 
     @Override
     public void keyReleased(KeyEvent e) {
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        int clickX = e.getX()/pixWidth;
+        int clickY = e.getY()/pixHeight;
+        
+//        if (grid[clickY][clickX] == Color.BLACK){
+            if (e.getButton() == 1)
+                spawnWorm(clickX, clickY);
+            else if (e.getButton() == 3)
+                spawnTarget(clickX, clickY);
+            else if (e.getButton() == 2)
+                spawnWall(clickX, clickY);
+//        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        
+        
     }
     
 }
