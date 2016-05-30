@@ -11,7 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -42,7 +42,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     ArrayList<Point> targets = new ArrayList();
     ArrayList<Worm> worms = new ArrayList();
     
-    final int FPS = 60;
+    final int FPS = 30;
     
     Color backGroundColor = Color.BLACK;
     
@@ -90,6 +90,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
                 g.fillRect(p.x*pixWidth, p.y*pixHeight, pixWidth, pixHeight);
             }
         }
+        
         for (Point p: targets)
         {
             g.setColor(Color.GREEN);
@@ -130,10 +131,16 @@ public class Main extends JComponent implements MouseListener, KeyListener{
             for (int x = 0; x < grid[y].length; x ++)
             {
                 grid[y][x] = Color.BLACK;
+//                targets.add(new Point(x, y));
             }
         }
+        
+        long startTime;
+        long endTime;
+        
         while(!done)
         {
+            startTime = System.nanoTime()/1000;
             if (!paused)
             {
                 if (!targets.isEmpty())
@@ -152,12 +159,16 @@ public class Main extends JComponent implements MouseListener, KeyListener{
             }
             repaint();
             
-            try {
-                Thread.sleep(1000/FPS);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            
+            endTime = System.nanoTime()/1000;
+            if (endTime - startTime < 1000/FPS){
+                try {
+                    Thread.sleep(1000/FPS - (endTime - startTime));
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
-            repaint();
+            
         }
             
         frame.setVisible(false); 
@@ -214,12 +225,12 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     public void mousePressed(MouseEvent e) {
         int clickX = e.getX()/pixWidth;
         int clickY = e.getY()/pixHeight;
-        if (grid[clickY][clickX] == Color.BLACK){
+//        if (grid[clickY][clickX] == Color.BLACK){
             if (e.getButton() == 1)
                 spawnWorm(clickX, clickY);
             else if (e.getButton() == 3)
                 spawnTarget(clickX, clickY);
-        }
+//        }
     }
 
     @Override
