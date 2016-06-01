@@ -11,7 +11,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -129,7 +128,8 @@ public class Main extends JComponent implements MouseListener, KeyListener{
         {
             for (int x = 0; x < grid[y].length; x ++)
             {
-                grid[y][x] = Color.BLACK;
+                grid[y][x] = Color.GREEN;
+                targets.add(new Point(x, y));
             }
         }
         while(!done)
@@ -167,7 +167,7 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     private void spawnWorm(int x, int y )
     {
         grid[y][x] = Color.WHITE;
-        worms.add(new Worm(x, y, randomInt(5, 30)));
+        worms.add(new Worm(x, y, randomInt(5, 20)));
     }
     
     private int randomInt(int min, int max)
@@ -214,12 +214,12 @@ public class Main extends JComponent implements MouseListener, KeyListener{
     public void mousePressed(MouseEvent e) {
         int clickX = e.getX()/pixWidth;
         int clickY = e.getY()/pixHeight;
-        if (grid[clickY][clickX] == Color.BLACK){
+        //if (grid[clickY][clickX] == Color.BLACK){
             if (e.getButton() == 1)
                 spawnWorm(clickX, clickY);
             else if (e.getButton() == 3)
                 spawnTarget(clickX, clickY);
-        }
+        //}
     }
 
     @Override
