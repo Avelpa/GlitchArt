@@ -73,7 +73,11 @@ public class Worm {
             targets.remove(closestPoint);
             grid[closestPoint.y][closestPoint.x] = Color.BLACK;
         }
-        grid[points.peek().y][points.peek().x] = Color.WHITE;
+        
+        for (int i = 0; i < points.size(); i ++)
+        {
+            grid[points.get(i).y][points.get(i).x] = new Color(255-i*(200/points.size()-1), 0, 0);
+        }
     }
     
     private void generatePath(Color[][] grid){
@@ -89,7 +93,6 @@ public class Worm {
             curPoint = nodes.remove();
             if (grid[curPoint.y][curPoint.x] == Color.GREEN){
                 finalNode = curPoint;
-//                nodes.add(curPoint);
                 break;
             }
             if (grid[curPoint.y][curPoint.x] == Color.DARK_GRAY)
@@ -151,7 +154,6 @@ public class Worm {
             path.push(curNode);
             curNode = curNode.parent;
         }
-        grid[points.peek().y][points.peek().x] = Color.WHITE;
     }
     
     public void shrink(Color[][] grid)
