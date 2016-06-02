@@ -32,7 +32,7 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
     static final int WIDTH = 800, HEIGHT = 800;
     static JFrame frame;
     
-    Color[][] grid = new Color[100][100];
+    Color[][] grid = new Color[25][25];
     BufferedImage img;
     
     int pixWidth = WIDTH/grid[0].length;
@@ -50,7 +50,9 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
     int targetX, targetY;
     
     boolean paused = false;
-    boolean clicked = false;
+    boolean clicked;
+    int mouseButton;
+    int mouseX, mouseY;
     
     public static void main(String[] args){
         
@@ -149,6 +151,19 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
         while(!done)
         {
             startTime = System.nanoTime()/1000;
+            
+            if (clicked)
+            {
+                if (grid[mouseY][mouseX] == Color.BLACK){
+                    if (mouseButton == 1)
+                        spawnWorm(mouseX, mouseY);
+                    else if (mouseButton == 3)
+                        spawnTarget(mouseX, mouseY);
+                    else if (mouseButton == 2)
+                        spawnWall(mouseX, mouseY);
+                }
+            }
+            
             if (!paused)
             {
                 if (!targets.isEmpty())
@@ -191,7 +206,7 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
     
     private void spawnWorm(int x, int y )
     {
-        grid[y][x] = Color.WHITE;
+        grid[y][x] = Color.RED;
         worms.add(new Worm(x, y, randomInt(5, 20)));
     }
     
@@ -244,27 +259,17 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
 
     @Override
     public void mousePressed(MouseEvent e) {
-        
-        
         clicked = true;
         
-        int clickX = e.getX()/pixWidth;
-        int clickY = e.getY()/pixHeight;
-//        if (grid[clickY][clickX] == Color.BLACK){
-            if (e.getButton() == 1)
-                spawnWorm(clickX, clickY);
-            else if (e.getButton() == 3)
-                spawnTarget(clickX, clickY);
-            else if (e.getButton() == 2)
-                spawnWall(clickX, clickY);
-//        }
+        mouseX = e.getX()/pixWidth;
+        mouseY = e.getY()/pixHeight;
+        
+        mouseButton = e.getButton();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        
         clicked = false;
-        
     }
 
     @Override
@@ -302,22 +307,12 @@ public class Main extends JComponent implements MouseListener, MouseMotionListen
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        int clickX = e.getX()/pixWidth;
-        int clickY = e.getY()/pixHeight;
-        
-//        if (grid[clickY][clickX] == Color.BLACK){
-            if (e.getButton() == 1)
-                spawnWorm(clickX, clickY);
-            else if (e.getButton() == 3)
-                spawnTarget(clickX, clickY);
-            else if (e.getButton() == 2)
-                spawnWall(clickX, clickY);
-//        }
+        mouseX = e.getX()/pixWidth;
+        mouseY = e.getY()/pixHeight;
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        
         
     }
     
