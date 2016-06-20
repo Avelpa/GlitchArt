@@ -29,10 +29,17 @@ import javax.swing.JFrame;
  */
 public class Main extends JComponent implements MouseListener, MouseMotionListener, KeyListener{
  
+    
+//    static enum GRID_TYPE{
+//        TARGET,
+//        WORM,
+//        WALL
+//    }
+    
     static final int WIDTH = 800, HEIGHT = 800;
     static JFrame frame;
     
-    Color[][] grid = new Color[25][25];
+    Color[][] grid = new Color[50][50];
     BufferedImage img;
     
     int pixWidth = WIDTH/grid[0].length;
